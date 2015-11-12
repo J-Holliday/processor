@@ -1,0 +1,74 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date:    10:57:31 11/12/2015 
+// Design Name: 
+// Module Name:    memory 
+// Project Name: 
+// Target Devices: 
+// Tool versions: 
+// Description: 
+//
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module ReadOnlyMemory(
+	input clk0,
+	input[3:0] in_address,
+	output[3:0] out_data
+    );
+
+	assign out_data = res;
+
+	reg[9:0] memory [3:0]; // [9:8]selector_order, [7:4]ALU_ordder, [3:0]immidiate_data
+	parameter[9:0] order[0:3] = {
+		10'b0000000000, // undefined
+		10'b0100010000, // MOV A,IN
+		10'b0100100000, // MOV B,IN
+		10'b1000010000, // MOV A,B
+		10'b1100100000, // MOV B,A
+		10'b0010000000, // JMP 0000
+		10'b0000000000, // undefined
+		10'b0000000000, // undefined
+		10'b0000000000, // undefined
+		10'b0000000000, // undefined
+		10'b0000000000, // undefined
+		10'b0000000000, // undefined
+		10'b0000000000, // undefined
+		10'b0000000000, // undefined
+		10'b0000000000, // undefined
+		10'b0000000000  // undefined
+	};
+	
+	reg initial_flag = 1;
+	reg[3:0] res;
+	always @(posedge clk0) begin
+		if(initial_flag==1) begin
+			memory[0] <= order[1];
+			memory[1] <= order[5];
+			memory[2] <= order[0];
+			memory[3] <= order[0];
+			memory[4] <= order[0];
+			memory[5] <= order[0];
+			memory[6] <= order[0];
+			memory[7] <= order[0];
+			memory[8] <= order[0];
+			memory[9] <= order[0];
+			memory[10] <= order[0];
+			memory[11] <= order[0];
+			memory[12] <= order[0];
+			memory[13] <= order[0];
+			memory[14] <= order[0];
+			memory[15] <= order[0];
+		end
+		
+		res = memory[in_address];
+	end
+
+endmodule
