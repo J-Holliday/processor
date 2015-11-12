@@ -19,10 +19,11 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module processor(
-	input clk0,
+	input wire clk0,
 	input [7:0] sw,
 	output [7:0] led
     );
+	 
 
 	//--- I-O define begin ---
 	assign led = {4'b0000, OUT};
@@ -39,9 +40,12 @@ module processor(
 	//--- wire define begin ---
 	wire [3:0] y;
 	wire [1:0] order_selector;
+	wire [3:0] order_ALU;
 	wire [3:0] ALU_value;
 	wire [1:0] ALU_address;
 	wire ALU_carry;
+	wire [9:0] order;
+	wire [3:0] immidiate;
 	//--- wire define end ---
 	
 	//--- selector define begin ---
@@ -49,18 +53,26 @@ module processor(
 	//--- selector define end ---
 	
 	//--- ALU define begin ---
-	ALU alu(.clk0(clk0), .y(y), .order(4'b0001), .res(ALU_value), .address(ALU_address), .carry(ALU_carry));
+	ALU alu(.clk0(clk0), .y(y), .order(4'b0001), .immidiate(immidiate),
+			  .res(ALU_value), .address(ALU_address), .carry(ALU_carry));
 	//--- ALU define end ---
 
-	always @(posedge clk0) begin
+	//--- Program Memory begin ---
+	ReadOnlyMemory rom(.clk0(clk0), .in_address(P_COUNT), .out_value(order));
+	//--- Program Memory end ---
+	
+	//--- decoder begin ----
+	decoder dcd(.order(order), .order_selector(order_selector), .order_ALU(order_ALU), .immidiate(immidiate));
+	//--- decoder end ---
+
+	always @(negedge clk0) begin
 		P_COUNT <= P_COUNT + 1;
-		
 		
 		if(ALU_address==4'b0010)
 			A = ALU_value;
 		
 		carry = ALU_carry;
-	end
+	end 
 
 endmodule
 
@@ -72,7 +84,7 @@ module selector(
 	output[3:0] y
 );
 
-	assign y = order[1]?order[0]?A:B:order[0]?IN:4'b0000;
+	assign y = order[1]?order[0]?A:B:order[0]?IN:4'b0000; // 11=A, 10=B, 01=IN, 00=0
 		
 endmodule
 
@@ -80,6 +92,7 @@ module ALU(
 	input clk0,
 	input[3:0] y,
 	input[3:0] order,
+	input[3:0] immidiate,
 	output[3:0] res,		// register value
 	output[1:0] address, // register address
 	output carry
@@ -103,34 +116,15 @@ module ALU(
 
 endmodule
 
-/*
-	reg enable = 0;
-	and_gate f1(.clk0(clk0), .enable(enable), .x1(sw[0]), .x2(sw[1]), .y(led[0]));
-
-	reg[26:0] c=0;
-	always @(posedge clk0) begin
-		
-		if(c[26]==27'd99999999) begin
-			enable <= ~enable;
-			c <= 0;
-		end
-		else
-			c <= c + 1;
-		
-	end
-
-endmodule
-
-module and_gate(
-	input clk0,
-	input enable,
-	input x1,
-	input x2,
-	output y
+module decoder(
+	input[9:0] order,
+	output[1:0] order_selector,
+	output[3:0] order_ALU,
+	output[3:0] immidiate
 );
 
-	assign y = x1 * x2;
+	assign order_selector = order[9:8];
+	assign order_ALU = order[7:4]; 
+	assign immidiate = order[3:0];
 
 endmodule
-
-*/
